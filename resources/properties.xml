@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!--
+    Test-harness only — NOT shipped in the compiled barrel.
+
+    `barreltest` compiles this whole project (via monkey.jungle) into a
+    synthetic host app to run tests/*.mc against. Without any declared
+    properties, TinymetrixMeta._getToken()'s `App.Properties.getValue(...)`
+    panics with "Unexpected Type Error: Failed invoking <symbol>" instead of
+    returning null — uncatchable by its own try/catch, failing every test
+    that transitively calls Client.track()/logInfo()/logError() (getMeta()).
+
+    scripts/minify.py's release/debug barrel build never touches this file:
+    it copies only manifest.xml + the merged source into an isolated temp
+    project, so consuming apps still declare their own TinymetrixToken as usual.
+-->
+<properties>
+    <property id="TinymetrixToken" type="string">test-token</property>
+    <property id="AppName" type="string">TinymetrixTests</property>
+    <property id="AppVersion" type="string">0.0.0</property>
+</properties>

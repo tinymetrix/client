@@ -1,0 +1,21 @@
+# Build artifacts (barrels are attached to GitHub Releases, not committed)
+output/
+bin/
+*.prg
+*.prg.debug.xml
+
+# Connect IQ SDK downloaded locally / by CI
+.connectiq/
+
+# Maintainer-only local convenience scripts (not used by CI, dropped for now —
+# add back if/when actually needed in this standalone repo).
+scripts/build.js
+scripts/release.js
+scripts/manifest-syncer.py
+
+# Node / editor / OS
+node_modules/
+.DS_Store
+.idea/
+.claude/
+.vscode/

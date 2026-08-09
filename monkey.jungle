@@ -1,0 +1,8 @@
+project.manifest = manifest.xml
+
+# Explicit, not a bare recursive "." — Jungle sourcePath is inclusive-only
+# (no exclude syntax), and a bare "." recurses into every subdirectory,
+# including examples/, which then collide with each other and with the
+# barrel itself (e.g. every example's own top-level `getApp()`). This scopes
+# compilation to just the barrel source + tests/ (which barreltest needs).
+base.sourcePath = .\*.mc;.\tests\*.mc

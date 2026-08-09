@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<properties>
+    <!-- Replace with your real token from the Tinymetrix dashboard. -->
+    <property id="TinymetrixToken" type="string">YOUR_TINYMETRIX_TOKEN</property>
+    <property id="AppName" type="string">SimpleApp</property>
+    <property id="AppVersion" type="string">1.0.0</property>
+
+    <property id="SyncIntervalMinutes" type="number">15</property>
+</properties>

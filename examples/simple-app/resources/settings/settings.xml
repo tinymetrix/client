@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<settings>
+    <setting propertyKey="@Properties.SyncIntervalMinutes" title="@Strings.SyncIntervalTitle">
+        <settingConfig type="numeric" min="5" max="60" />
+    </setting>
+</settings>

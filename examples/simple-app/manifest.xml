@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<!--
+    Example widget showing the rest of the Tinymetrix API surface not
+    covered by examples/simple-watchface: reacting to settings changes,
+    and a realistic logError/logInfo path. Trimmed device list — see
+    examples/simple-watchface/manifest.xml for how to add more.
+-->
+<iq:manifest version="3" xmlns:iq="http://www.garmin.com/xml/connectiq">
+    <iq:application id="9c1d4e2b-6a3f-4b8d-9e7c-2f5a8b1c3d6e" type="widget" name="@Strings.AppName" entry="SimpleAppApp" launcherIcon="@Drawables.LauncherIcon" minApiLevel="3.2.0">
+        <iq:products>
+            <iq:product id="fenix7"/>
+            <iq:product id="fenix7pro"/>
+            <iq:product id="fr965"/>
+            <iq:product id="venu3"/>
+            <iq:product id="venu3s"/>
+            <iq:product id="epix2"/>
+            <iq:product id="vivoactive5"/>
+        </iq:products>
+        <iq:permissions>
+            <!-- Tinymetrix needs these to sync analytics in the background -->
+            <iq:uses-permission id="Background"/>
+            <iq:uses-permission id="Communications"/>
+        </iq:permissions>
+        <iq:languages>
+            <iq:language>eng</iq:language>
+        </iq:languages>
+        <iq:barrels>
+            <iq:depends name="Tinymetrix" version="2.2.0"/>
+        </iq:barrels>
+    </iq:application>
+</iq:manifest>
