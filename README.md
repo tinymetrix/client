@@ -193,7 +193,7 @@ python3 scripts/minify.py . --build --debug --sdk "$CIQ_HOME" \
 
 Unit tests live in [`tests/`](tests) and use the Connect IQ [`(:test)` framework](https://developer.garmin.com/connect-iq/core-topics/unit-testing/). Every pull request runs them headlessly in CI (see the `test` job in [`.github/workflows/ci.yml`](.github/workflows/ci.yml)) against a throwaway signing key — no secrets required.
 
-The repo-root [`resources/properties.xml`](resources/properties.xml) exists only so `barreltest`'s synthetic host app has *some* declared properties — without it, `App.Properties.getValue()` panics instead of returning null. It's never included in the actual barrel (`scripts/minify.py`'s build copies only `manifest.xml` + merged source into an isolated temp project).
+[`test-fixtures/properties.xml`](test-fixtures/properties.xml) exists only so `barreltest`'s synthetic host app has *some* declared properties — without it, `App.Properties.getValue()` panics instead of returning null. It's test-only infrastructure, never included in the actual barrel (`scripts/minify.py`'s build copies only `manifest.xml` + merged source into an isolated temp project).
 
 ## Releasing (maintainers)
 

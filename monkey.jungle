@@ -6,3 +6,11 @@ project.manifest = manifest.xml
 # barrel itself (e.g. every example's own top-level `getApp()`). This scopes
 # compilation to just the barrel source + tests/ (which barreltest needs).
 base.sourcePath = .\*.mc;.\tests\*.mc
+
+# Not "resources" (the Jungle default) on purpose: that name reads as "the
+# library's own resources," but the barrel itself has none — this only
+# exists so barreltest's synthetic test host has a declared TinymetrixToken
+# property (see test-fixtures/properties.xml for why). Never touched by the
+# actual barrel build (scripts/minify.py only copies manifest.xml + merged
+# source into an isolated temp project).
+base.resourcePath = test-fixtures
