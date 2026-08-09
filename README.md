@@ -29,7 +29,7 @@ Lightweight analytics & crash/error logging barrel for [Garmin Connect IQ](https
 ## Install
 
 1. Get an app token from your Tinymetrix dashboard (this is the `TinymetrixToken` used below).
-2. Download the latest `.barrel` from [Releases](https://github.com/tinymetrix/client/releases) — grab the `tinymetrix-<version>.barrel` for release builds, or the `-debug` one while developing (unstripped logging).
+2. Download a `.barrel` from [Releases](https://github.com/tinymetrix/client/releases) — grab the `tinymetrix-<version>.barrel` for release builds, or the `-debug` one while developing (unstripped logging). Prefer not pinning a version? [`tinymetrix-latest.barrel`](https://github.com/tinymetrix/client/releases/latest/download/tinymetrix-latest.barrel) / [`tinymetrix-latest-debug.barrel`](https://github.com/tinymetrix/client/releases/latest/download/tinymetrix-latest-debug.barrel) always resolve to the newest release.
 3. Point a barrel at it in your project's `barrels.jungle` (or edit it via VS Code's *Monkey C: Configure Monkey Barrel* command):
 
    ```jungle
@@ -126,14 +126,14 @@ enum EventType {
 
 Pick the one matching your app's entry point. All three accept an optional config `Dictionary` in `initialize()` (see [Config options](#config-options)) and automatically:
 
-- Track `INSTALL` (and `SESSION_START` / `SESSION_END` for `ApplicationBase`) on launch.
+- Track `INSTALL` on launch.
 - Register the background `ServiceDelegate` that flushes queued events/logs to Tinymetrix.
 - Mark foreground/background execution context so background-restricted communications aren't attempted from a temporary activity.
 
 | Class | Use for | Notes |
 |---|---|---|
 | `Tinymetrix.WatchFaceApplicationBase` | Watch faces | Override `onCreateView()`. |
-| `Tinymetrix.ApplicationBase` | Regular apps / widgets | Override `onCreateView()`. Also tracks `SESSION_START`/`SESSION_END`. |
+| `Tinymetrix.ApplicationBase` | Regular apps / widgets | Override `onCreateView()`. The only base class that ever emits `SESSION_START`/`SESSION_END` — gated behind the `trackSessions` config key (see below), off by default. |
 | `Tinymetrix.DataFieldApplicationBase` | Data fields | Override `onCreateView()`. |
 
 All three also expose:
@@ -153,7 +153,7 @@ Passed as a `Dictionary` to the base class `initialize()`. All keys are optional
 |---|---|---|---|
 | `enabled` | `Boolean` | `true` | Master on/off switch for tracking. |
 | `debug` | `Boolean` | `false` | Verbose local logging via `System.println`. |
-| `trackSessions` | `Boolean` | `false` | Track `SESSION_START`/`SESSION_END` (always on for `ApplicationBase`). |
+| `trackSessions` | `Boolean` | `false` | Track `SESSION_START`/`SESSION_END`. Only has an effect on `Tinymetrix.ApplicationBase` — `WatchFaceApplicationBase`/`DataFieldApplicationBase` never emit session events regardless of this setting. |
 | `heartbeat` | `Boolean` | `true` | Periodic `HEARTBEAT` event while the app is active. |
 | `syncDelay` | `Number` (seconds) | `43200` (12h) | Minimum delay between background syncs to the ingest API. Clamped to `[300, 604800]` (5 min – 7 days). |
 | `sampleRate` | `Number` | `10` | Drop repeated identical consecutive logs, keeping 1 in N. `1` disables sampling. |
@@ -168,7 +168,8 @@ Passed as a `Dictionary` to the base class `initialize()`. All keys are optional
 
 ## Examples
 
-- [`examples/simple-watchface`](examples/simple-watchface) — minimal digital watch face wired up to Tinymetrix: tracking a custom event on tap, setting a user id, and logging.
+- [`examples/simple-watchface`](examples/simple-watchface) — minimal digital watch face: `setUserId`/`setUserProperties` on launch, `logError` from the AMOLED power-budget callback.
+- [`examples/simple-app`](examples/simple-app) — widget showing the rest of the API: reacting to `onSettingsChanged()` with a custom `track()` event + `setUserProperties`, and a realistic `logInfo`/`logError` path around a settings value.
 
 ## Building from source
 

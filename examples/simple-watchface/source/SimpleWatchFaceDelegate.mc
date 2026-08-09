@@ -2,8 +2,9 @@ import Toybox.Lang;
 import Toybox.WatchUi;
 import Tinymetrix;
 
-// Tapping the watch face tracks a custom event and logs through Tinymetrix —
-// `track()` accepts any String, not just Tinymetrix.EventType values.
+// AMOLED devices call this when the watch face is eating more battery than
+// its budget allows — a real error condition worth reporting, unlike the
+// contrived examples logError call sites usually reach for.
 class SimpleWatchFaceDelegate extends WatchUi.WatchFaceDelegate {
 
     function initialize() {
