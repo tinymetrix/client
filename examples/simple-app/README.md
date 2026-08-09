@@ -12,18 +12,18 @@ Minimal widget demonstrating the rest of the Tinymetrix API not covered by
 
 ## Run it
 
-Build a barrel from the repo root (see [`examples/simple-watchface`](../simple-watchface#run-it) for why not a raw `monkeyc`/`monkeybrains` call), then compile this folder — both jungle files are needed, `monkey.jungle` alone won't pull in the barrel dependency declared in `barrels.jungle`:
+From a checkout of the [`tinymetrix/client`](https://github.com/tinymetrix/client) repo, with the Connect IQ SDK installed:
 
-```bash
-python3 scripts/minify.py . --build --debug --sdk "$CIQ_HOME" \
-  --barrel-output output/tinymetrix-2.2.0-debug.barrel
+1. Download [`tinymetrix-latest-debug.barrel`](https://github.com/tinymetrix/client/releases/latest/download/tinymetrix-latest-debug.barrel) and save it to `output/tinymetrix-latest-debug.barrel` at the repo root — `barrels.jungle` already points there, nothing to edit.
+2. Open this folder in VS Code with the Monkey C extension and run/debug normally, or from the CLI (both jungle files — `monkey.jungle` alone won't pull in the barrel dependency declared in `barrels.jungle`):
 
-monkeyc -f "examples/simple-app/monkey.jungle;examples/simple-app/barrels.jungle" \
-        -d fenix7pro \
-        -o bin/simple-app.prg \
-        -y developer_key.der
-monkeydo bin/simple-app.prg fenix7pro
-```
+   ```bash
+   monkeyc -f "examples/simple-app/monkey.jungle;examples/simple-app/barrels.jungle" \
+           -d fenix7pro \
+           -o bin/simple-app.prg \
+           -y developer_key.der
+   monkeydo bin/simple-app.prg fenix7pro
+   ```
 
 To see `onSettingsChanged()` fire in the simulator: run the app, then in the
 simulator go to *Settings → App Settings* (or trigger it via
@@ -35,6 +35,7 @@ Set your real token in `resources/properties.xml` (`TinymetrixToken`) before shi
 
 ## Using this as a template
 
-Same steps as [`examples/simple-watchface`](../simple-watchface#using-this-as-a-template) —
-rename `SimpleApp*`, point `barrels.jungle` at a released barrel, add your
-full device list.
+Copy this folder as a starting point for your own app, then:
+
+1. Rename `SimpleApp*` classes/files and the `manifest.xml` `entry`/`name`.
+2. Add your full device list to `manifest.xml` (VS Code: *Monkey C: Set Products by Product Category*).

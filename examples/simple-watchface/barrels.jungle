@@ -1,9 +1,7 @@
-# Points at a locally-built barrel by default so `node ../../scripts/build.js`
-# + this example work out of the box from a checkout of this repo.
-#
-# If you're using this example as a template for your own project, replace
-# the path below with wherever you downloaded the .barrel from
-# https://github.com/tinymetrix/tinymetrix-client/releases, or regenerate it
-# with VS Code's "Monkey C: Configure Monkey Barrel" command.
-Tinymetrix = "../../output/tinymetrix-2.2.0-debug.barrel"
+# Download tinymetrix-latest-debug.barrel from
+# https://github.com/tinymetrix/client/releases/latest and save it to
+# output/tinymetrix-latest-debug.barrel (relative to the repo root) — this
+# path then works with no editing. Using a pinned version instead? Point
+# this at wherever you saved it.
+Tinymetrix = "../../output/tinymetrix-latest-debug.barrel"
 base.barrelPath = $(base.barrelPath);$(Tinymetrix)

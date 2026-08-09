@@ -8,26 +8,18 @@ Minimal digital watch face demonstrating the Tinymetrix Connect IQ client:
 
 ## Run it
 
-From a checkout of the [`tinymetrix/client`](https://github.com/tinymetrix/client) repo, with the Connect IQ SDK installed and `$CIQ_HOME` pointing at it:
+From a checkout of the [`tinymetrix/client`](https://github.com/tinymetrix/client) repo, with the Connect IQ SDK installed:
 
-```bash
-# 1. Build a barrel (from the repo root) so barrels.jungle has something to point at.
-#    (Not a raw monkeybrains/monkeyc invocation: monkey.jungle's
-#    `base.sourcePath = .` is recursive and would try to compile this example
-#    itself as if it belonged to the Tinymetrix barrel namespace.
-#    scripts/minify.py merges only the top-level *.mc files.)
-python3 scripts/minify.py . --build --debug --sdk "$CIQ_HOME" \
-  --barrel-output output/tinymetrix-2.2.0-debug.barrel
+1. Download [`tinymetrix-latest-debug.barrel`](https://github.com/tinymetrix/client/releases/latest/download/tinymetrix-latest-debug.barrel) and save it to `output/tinymetrix-latest-debug.barrel` at the repo root — `barrels.jungle` already points there, nothing to edit.
+2. Open this folder in VS Code with the Monkey C extension and run/debug normally, or from the CLI (both jungle files — `monkey.jungle` alone won't pull in the barrel dependency declared in `barrels.jungle`):
 
-# 2. Open this folder in VS Code with the Monkey C extension and run/debug normally,
-#    or from the CLI (both jungle files — monkey.jungle alone won't pull in
-#    the barrel dependency declared in barrels.jungle):
-monkeyc -f "examples/simple-watchface/monkey.jungle;examples/simple-watchface/barrels.jungle" \
-        -d fenix7pro \
-        -o bin/simple-watchface.prg \
-        -y developer_key.der
-monkeydo bin/simple-watchface.prg fenix7pro
-```
+   ```bash
+   monkeyc -f "examples/simple-watchface/monkey.jungle;examples/simple-watchface/barrels.jungle" \
+           -d fenix7pro \
+           -o bin/simple-watchface.prg \
+           -y developer_key.der
+   monkeydo bin/simple-watchface.prg fenix7pro
+   ```
 
 Set your real token in `resources/properties.xml` (`TinymetrixToken`) before shipping — the placeholder value only works against your own test setup.
 
@@ -36,5 +28,4 @@ Set your real token in `resources/properties.xml` (`TinymetrixToken`) before shi
 Copy this folder as a starting point for your own app, then:
 
 1. Rename `SimpleWatchFace*` classes/files and the `manifest.xml` `entry`/`name`.
-2. Update `barrels.jungle` to point at a barrel downloaded from [Releases](https://github.com/tinymetrix/client/releases) instead of a locally-built one.
-3. Add your full device list to `manifest.xml` (VS Code: *Monkey C: Set Products by Product Category*).
+2. Add your full device list to `manifest.xml` (VS Code: *Monkey C: Set Products by Product Category*).
