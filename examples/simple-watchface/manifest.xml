@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<!--
+    Example manifest for a minimal watch face using the Tinymetrix barrel.
+    Trimmed to a handful of devices for readability — add more with
+    VS Code's "Monkey C: Edit Products", or copy the full list from a
+    real project's manifest.xml.
+-->
+<iq:manifest version="3" xmlns:iq="http://www.garmin.com/xml/connectiq">
+    <iq:application id="7e5f3b1a-2c4d-4e6f-9a8b-1d2e3f4a5b6c" type="watchface" name="@Strings.AppName" entry="SimpleWatchFaceApp" launcherIcon="@Drawables.LauncherIcon" minApiLevel="3.2.0">
+        <iq:products>
+            <iq:product id="fenix7"/>
+            <iq:product id="fenix7pro"/>
+            <iq:product id="fr965"/>
+            <iq:product id="venu3"/>
+            <iq:product id="venu3s"/>
+            <iq:product id="epix2"/>
+            <iq:product id="vivoactive5"/>
+        </iq:products>
+        <iq:permissions>
+            <!-- Tinymetrix needs these to sync analytics in the background -->
+            <iq:uses-permission id="Background"/>
+            <iq:uses-permission id="Communications"/>
+        </iq:permissions>
+        <iq:languages>
+            <iq:language>eng</iq:language>
+        </iq:languages>
+        <iq:barrels>
+            <iq:depends name="Tinymetrix" version="2.2.0"/>
+        </iq:barrels>
+    </iq:application>
+</iq:manifest>

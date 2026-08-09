@@ -1,0 +1,205 @@
+name: CI
+
+# Every PR (and every push to main) runs the unit test suite headlessly.
+# `release` only runs on main, only after `test` passes, and only actually
+# builds/tags/releases when manifest.xml's barrel version doesn't have a
+# matching tag yet — i.e. when a version-bump commit lands on main.
+#
+# SDK download (scripts/ci-download-sdk.sh) and the barrel build/minify
+# logic (scripts/minify.py) are reused straight from the repo — not
+# duplicated here.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+env:
+  DEVICE_ID: fenix7pro
+  # Deliberately OUTSIDE the checked-out repo (plain /tmp, not
+  # github.workspace — the `runner` context isn't usable in an `env:` block
+  # at any level, so no context expression here): Monkey C Jungle's
+  # `base.sourcePath = .` recurses into subdirectories, so an SDK installed
+  # inside the workspace gets its own bundled project templates
+  # (bin/templates/**) swept up as source files and fails to compile
+  # (`${appClassName}` etc. placeholders aren't real Monkey C).
+  CIQ_HOME: /tmp/connectiq
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    name: Unit tests
+    # The bundled Connect IQ simulator links against libwebkit2gtk 4.0, which
+    # was dropped from Ubuntu 24.04 ("noble", i.e. ubuntu-latest) in favor of
+    # 4.1 — pin to 22.04 ("jammy") where the 4.0 package still exists.
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            curl jq wget unzip openjdk-17-jre-headless \
+            libwebkit2gtk-4.0-37 libusb-1.0-0 libsm6 xvfb
+
+      - name: Cache Connect IQ SDK
+        id: sdk-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.CIQ_HOME }}
+          # Same key as the release job below: it's the plain SDK zip
+          # (compiler + monkeybrains.jar), not OS-version-specific — only the
+          # bundled simulator (needed here, not for a release barrel build)
+          # cares about jammy vs noble. Sharing the key means release can
+          # reuse whatever test already downloaded in the same run.
+          key: connectiq-sdk-linux
+
+      - name: Download Connect IQ SDK
+        if: steps.sdk-cache.outputs.cache-hit != 'true'
+        run: bash scripts/ci-download-sdk.sh "$CIQ_HOME"
+
+      - name: Cache device definitions
+        id: devices-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.Garmin/ConnectIQ/Devices
+          key: connectiq-devices-v1
+
+      - name: Download device definitions
+        if: steps.devices-cache.outputs.cache-hit != 'true'
+        run: bash scripts/ci-download-devices.sh
+
+      - name: Generate throwaway signing key
+        # Test compilation needs *a* signing key, but not your real publishing
+        # one — a fresh self-signed key is generated on every run instead of
+        # storing a secret in this public repo.
+        run: |
+          openssl genrsa -out /tmp/key.pem 4096
+          openssl pkcs8 -topk8 -inform PEM -outform DER -nocrypt \
+            -in /tmp/key.pem -out /tmp/key.der
+
+      - name: Compile unit tests
+        run: |
+          mkdir -p bin
+          "$CIQ_HOME/bin/barreltest" -y /tmp/key.der -f monkey.jungle \
+            -d "$DEVICE_ID" -o bin/tests.prg
+
+      - name: Run unit tests (headless simulator)
+        run: |
+          cat > /tmp/run-tests.sh <<'EOF'
+          set -e
+          "$CIQ_HOME/bin/connectiq" &
+          sleep 8
+          set +e
+          "$CIQ_HOME/bin/monkeydo" bin/tests.prg "$DEVICE_ID" -t | tee /tmp/test-output.txt
+          EOF
+          chmod +x /tmp/run-tests.sh
+          xvfb-run -a /tmp/run-tests.sh
+
+          # monkeydo's own exit code is unreliable (always 1, even on a full
+          # pass — see matco/connectiq-tester's tester.sh, which works around
+          # the same thing). The real signal is the summary line: either a
+          # bare "PASSED" or "FAILED (passed=X, failed=Y, errors=Z)".
+          SUMMARY=$(grep -E "^(PASSED|FAILED)" /tmp/test-output.txt | tail -1)
+          echo "Result: ${SUMMARY:-<no PASSED/FAILED summary line found>}"
+          if [ -z "$SUMMARY" ] || [[ "$SUMMARY" != PASSED* ]]; then
+            echo "::error::Tests did not pass: ${SUMMARY:-no summary line found in output}"
+            exit 1
+          fi
+          echo "✅ All tests passed"
+
+  release:
+    name: Build & publish release
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Read version from manifest.xml
+        id: version
+        run: |
+          VERSION=$(grep -oE '<iq:barrel[^>]+version="[0-9]+\.[0-9]+\.[0-9]+"' manifest.xml \
+            | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+          if [ -z "$VERSION" ]; then
+            echo "::error::Could not read barrel version from manifest.xml"
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Check whether this version was already released
+        id: tag
+        run: |
+          if git rev-parse "v${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install system dependencies
+        if: steps.tag.outputs.exists == 'false'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends curl jq wget unzip openjdk-17-jre-headless
+
+      - name: Cache Connect IQ SDK
+        if: steps.tag.outputs.exists == 'false'
+        id: sdk-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.CIQ_HOME }}
+          key: connectiq-sdk-linux
+
+      - name: Download Connect IQ SDK
+        if: steps.tag.outputs.exists == 'false' && steps.sdk-cache.outputs.cache-hit != 'true'
+        run: bash scripts/ci-download-sdk.sh "$CIQ_HOME"
+
+      - name: Cache device definitions
+        if: steps.tag.outputs.exists == 'false'
+        id: devices-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.Garmin/ConnectIQ/Devices
+          key: connectiq-devices-v1
+
+      - name: Download device definitions
+        if: steps.tag.outputs.exists == 'false' && steps.devices-cache.outputs.cache-hit != 'true'
+        # monkeybrains validates manifest.xml's <iq:products> list against
+        # installed device definitions even for a plain barrel build (no
+        # -d device flag) — needed here too, not just for running tests.
+        run: bash scripts/ci-download-devices.sh
+
+      - name: Build release barrel
+        if: steps.tag.outputs.exists == 'false'
+        run: |
+          mkdir -p output
+          python3 scripts/minify.py . --build --release --sdk "$CIQ_HOME" \
+            --barrel-output "output/tinymetrix-${{ steps.version.outputs.version }}.barrel"
+
+      - name: Build debug barrel
+        if: steps.tag.outputs.exists == 'false'
+        run: |
+          python3 scripts/minify.py . --build --debug --sdk "$CIQ_HOME" \
+            --barrel-output "output/tinymetrix-${{ steps.version.outputs.version }}-debug.barrel"
+
+      - name: Tag release
+        if: steps.tag.outputs.exists == 'false'
+        run: |
+          git tag "v${{ steps.version.outputs.version }}"
+          git push origin "v${{ steps.version.outputs.version }}"
+
+      - name: Create GitHub release
+        if: steps.tag.outputs.exists == 'false'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: v${{ steps.version.outputs.version }}
+          generate_release_notes: true
+          files: |
+            output/tinymetrix-${{ steps.version.outputs.version }}.barrel
+            output/tinymetrix-${{ steps.version.outputs.version }}-debug.barrel
