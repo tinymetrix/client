@@ -187,6 +187,12 @@ jobs:
           python3 scripts/minify.py . --build --debug --sdk "$CIQ_HOME" \
             --barrel-output "output/tinymetrix-${{ steps.version.outputs.version }}-debug.barrel"
 
+      - name: Create latest barrel aliases
+        if: steps.tag.outputs.exists == 'false'
+        run: |
+          cp "output/tinymetrix-${{ steps.version.outputs.version }}.barrel" output/tinymetrix-latest.barrel
+          cp "output/tinymetrix-${{ steps.version.outputs.version }}-debug.barrel" output/tinymetrix-latest-debug.barrel
+
       - name: Tag release
         if: steps.tag.outputs.exists == 'false'
         run: |
@@ -203,3 +209,5 @@ jobs:
           files: |
             output/tinymetrix-${{ steps.version.outputs.version }}.barrel
             output/tinymetrix-${{ steps.version.outputs.version }}-debug.barrel
+            output/tinymetrix-latest.barrel
+            output/tinymetrix-latest-debug.barrel
