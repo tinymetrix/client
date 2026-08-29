@@ -111,6 +111,23 @@ jobs:
           fi
           echo "✅ All tests passed"
 
+  device-preflight:
+    name: Verify Garmin device download
+    # Do not expose Garmin credentials to pull requests from forks.
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install prerequisites
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends curl python3 tar
+
+      - name: Download and verify device definitions
+        env:
+          GARMIN_USERNAME: ${{ secrets.GARMIN_USERNAME }}
+          GARMIN_PASSWORD: ${{ secrets.GARMIN_PASSWORD }}
+        run: bash scripts/ci-download-devices-garmin.sh manifest.xml
+
   release:
     name: Build & publish release
     needs: test
