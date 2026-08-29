@@ -30,7 +30,26 @@ fi
 
 "$MANAGER" agreement accept --agreement-hash="$AGREEMENT_HASH"
 "$MANAGER" login
-"$MANAGER" device download --manifest="$MANIFEST_PATH"
+
+mapfile -t DEVICES < <(python3 - "$MANIFEST_PATH" <<'PY'
+import sys
+import xml.etree.ElementTree as ET
+
+namespace = {'iq': 'http://www.garmin.com/xml/connectiq'}
+for node in ET.parse(sys.argv[1]).findall('.//iq:product', namespace):
+    print(node.attrib['id'])
+PY
+)
+if [ "${#DEVICES[@]}" -eq 0 ]; then
+    echo "No devices found in $MANIFEST_PATH" >&2
+    exit 1
+fi
+
+DEVICE_ARGS=()
+for device in "${DEVICES[@]}"; do
+    DEVICE_ARGS+=(--device "$device")
+done
+"$MANAGER" device download "${DEVICE_ARGS[@]}"
 
 python3 - "$MANIFEST_PATH" "$DEVICES_DIR" <<'PY'
 import sys
