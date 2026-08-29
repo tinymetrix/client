@@ -165,14 +165,14 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.Garmin/ConnectIQ/Devices
-          key: connectiq-devices-v1
+          key: connectiq-devices-garmin-v1-${{ hashFiles('manifest.xml') }}
 
       - name: Download device definitions
         if: steps.tag.outputs.exists == 'false' && steps.devices-cache.outputs.cache-hit != 'true'
-        # monkeybrains validates manifest.xml's <iq:products> list against
-        # installed device definitions even for a plain barrel build (no
-        # -d device flag) — needed here too, not just for running tests.
-        run: bash scripts/ci-download-devices.sh
+        env:
+          GARMIN_USERNAME: ${{ secrets.GARMIN_USERNAME }}
+          GARMIN_PASSWORD: ${{ secrets.GARMIN_PASSWORD }}
+        run: bash scripts/ci-download-devices-garmin.sh manifest.xml
 
       - name: Build release barrel
         if: steps.tag.outputs.exists == 'false'
