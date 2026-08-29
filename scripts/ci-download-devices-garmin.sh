@@ -28,7 +28,7 @@ if [ -z "$AGREEMENT_HASH" ]; then
     exit 1
 fi
 
-"$MANAGER" agreement accept --acceptance-hash="$AGREEMENT_HASH"
+"$MANAGER" agreement accept --agreement-hash="$AGREEMENT_HASH"
 "$MANAGER" login
 "$MANAGER" device download --manifest="$MANIFEST_PATH"
 
