@@ -1,0 +1,23 @@
+name: Device preflight
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-device-download:
+    name: Download and verify device definitions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install prerequisites
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends curl python3 tar
+
+      - name: Download and verify devices
+        env:
+          GARMIN_USERNAME: ${{ secrets.GARMIN_USERNAME }}
+          GARMIN_PASSWORD: ${{ secrets.GARMIN_PASSWORD }}
+        run: bash scripts/ci-download-devices-garmin.sh manifest.xml
